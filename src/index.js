@@ -41,7 +41,7 @@ async function _rawStream(query = '', input = []) {
                                 }))
                             .on('finish', function () {
                                 resolver(true);
-                                conn.end();
+                                conn.release();
                             });
                     }));
                 }
