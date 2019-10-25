@@ -12,10 +12,16 @@ let pool = null;
  */
 async function query(query, input) {
     return new Promise((resolve, reject) => {
-        pool.query(query, input, (err, result) => {
+        pool.getConnection((err, conn) => {
             if (err) reject(err);
-            else resolve(result);
-        })
+            else {
+                conn.query(query, input, (err, result) => {
+                    conn.relese();
+                    if (err) reject(err);
+                    else resolve(result);
+                })
+            }
+        });
     })
 }
 
