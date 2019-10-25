@@ -4,19 +4,15 @@ const stream = require('stream');
 
 let pool = null;
 
-/**
- *  Queries the database
- * 
- * @param {String} query - Query string to be executed
- * @param {Array<Object>} input - Input parameters for prepared statements
- */
 async function query(query, input) {
     return new Promise((resolve, reject) => {
         pool.getConnection((err, conn) => {
-            if (err) reject(err);
-            else {
+            if (err) {
+                conn.destroy();
+                reject(err);
+            } else {
                 conn.query(query, input, (err, result) => {
-                    conn.release();
+                    conn.destroy();
                     if (err) reject(err);
                     else resolve(result);
                 })
@@ -34,6 +30,7 @@ async function _rawStream(query = '', input = []) {
                     resolve((superCallback) => new Promise((resolver, rechazar) => {
                         conn.query(query, input)
                             .on('error', function (err) {
+                                conn.destroy();
                                 rechazar(err);
                             })
                             .stream()
@@ -46,8 +43,8 @@ async function _rawStream(query = '', input = []) {
                                     }
                                 }))
                             .on('finish', function () {
+                                conn.destroy();
                                 resolver(true);
-                                conn.release();
                             });
                     }));
                 }
@@ -68,23 +65,65 @@ async function _rawStream(query = '', input = []) {
  * @param {Array<String>} input The input values for prepared statements, default is []
  */
 function queryStream(query, input = []) {
+    /**
+     * Have a .read promise that contains a callback, where every row will be streamed
+     */
     return {
-        async read(cb) {
+
+        /**
+         *  Example:
+         * const mystream = conn.stream('SELECT * from data');
+         * 
+         * await mystream.read((row)=>{
+         * 
+         *  console.log(row); //print each row
+         * 
+         * })
+         * 
+         * @param {Function} callback
+         */
+        async read(callback) {
             await (await _rawStream(query, input))(row => {
-                cb(row);
+                callback(row);
             });
         }
     }
 }
 
 module.exports = {
+    /**
+     * Returns a connection method, config is the same as mysql
+     * example:
+     * 
+     * mysqlm.connect({
+     *  host: 'localhost',
+     *  user: 'root',
+     *  password: '',
+     *  database: 'officedb'
+     * })
+     */
     connect: (config = {}) => {
         pool = mysql.createPool(config);
 
         return {
+            /**
+             *  Queries the database, returns a Promise that resolves in the result
+             * 
+             * @param {String} query - Query string to be executed
+             * @param {Array<Object>} input - Input parameters for prepared statements
+             */
             query,
+            /**
+             *  Queries the database, returns a Object with a stream-like method
+             * 
+             * @param {String} query - Query string to be executed
+             * @param {Array<Object>} input - Input parameters for prepared statements
+             */
             queryStream
         }
     },
+    /**
+     * Returns the mysql module (same as require('mysql'))
+     */
     getMysql: () => require('mysql')
 }
