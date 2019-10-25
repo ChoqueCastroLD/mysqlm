@@ -16,7 +16,7 @@ async function query(query, input) {
             if (err) reject(err);
             else {
                 conn.query(query, input, (err, result) => {
-                    conn.relese();
+                    conn.release();
                     if (err) reject(err);
                     else resolve(result);
                 })
