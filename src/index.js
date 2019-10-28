@@ -8,11 +8,11 @@ async function query(query, input) {
     return new Promise((resolve, reject) => {
         pool.getConnection((err, conn) => {
             if (err) {
-                conn.destroy();
+                if(conn.destroy) conn.destroy();
                 reject(err);
             } else {
                 conn.query(query, input, (err, result) => {
-                    conn.destroy();
+                    if(conn.destroy) conn.destroy();
                     if (err) reject(err);
                     else resolve(result);
                 })
@@ -25,12 +25,14 @@ async function _rawStream(query = '', input = []) {
     return new Promise((resolve, reject) => {
         try {
             pool.getConnection((err, conn) => {
-                if (err) reject(err);
-                else {
+                if (err) {
+                    if(conn.destroy) conn.destroy();
+                    reject(err);
+                }else {
                     resolve((superCallback) => new Promise((resolver, rechazar) => {
                         conn.query(query, input)
                             .on('error', function (err) {
-                                conn.destroy();
+                                if(conn.destroy) conn.destroy();
                                 rechazar(err);
                             })
                             .stream()
@@ -43,7 +45,7 @@ async function _rawStream(query = '', input = []) {
                                     }
                                 }))
                             .on('finish', function () {
-                                conn.destroy();
+                                if(conn.destroy) conn.destroy();
                                 resolver(true);
                             });
                     }));
