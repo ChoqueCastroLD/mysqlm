@@ -1,7 +1,6 @@
 const mysql = require('mysql');
 const stream = require('stream');
 
-
 let pool = null;
 
 async function query(query, input) {
@@ -106,7 +105,7 @@ module.exports = {
      */
     connect: (config = {}) => {
         pool = mysql.createPool(config);
-
+        
         return {
             /**
              *  Queries the database, returns a Promise that resolves in the result
@@ -127,5 +126,11 @@ module.exports = {
     /**
      * Returns the mysql module (same as require('mysql'))
      */
-    getMysql: () => require('mysql')
+    getMysql: () => mysql,
+    
+    /** 
+     * Populates mysql methods and properties into mysqlm 
+     */
+    ...(() => mysql)(),
+    Types: mysql.Types
 }
