@@ -104,7 +104,7 @@ await conn.try(async (t) => {
   await t.query('INSERT INTO player SET ?', [{name: 'Max4', points: 400}]);
   await t.query('INSERT INTO player SET ?', [{name: 'Max5', points: 400}]);
 });
-// After Transaction, Table player still have 5 rows
+// After Transaction, Table player will have 5 rows
 // Because transaction succeded
 
 ````

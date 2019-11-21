@@ -1,6 +1,6 @@
 {
   "name": "mysqlm",
-  "version": "1.5.6",
+  "version": "1.5.7",
   "description": "A.K.A \"MySQL Mini\" is A minimalist Nodejs module that will give you improved mysql/mariadb query methods (promised and stream-like and transactions)",
   "main": "src/index.js",
   "scripts": {
