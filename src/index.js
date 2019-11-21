@@ -7,11 +7,11 @@ async function query(query, input) {
     return new Promise((resolve, reject) => {
         pool.getConnection((err, conn) => {
             if (err) {
-                if(Reflect.has(conn || {}, 'destroy')) conn.destroy();
+                if (Reflect.has(conn || {}, 'destroy')) conn.destroy();
                 reject(err);
             } else {
                 conn.query(query, input, (err, result) => {
-                    if(Reflect.has(conn || {}, 'destroy')) conn.destroy();
+                    if (Reflect.has(conn || {}, 'destroy')) conn.destroy();
                     if (err) reject(err);
                     else resolve(result);
                 })
@@ -25,13 +25,13 @@ async function _rawStream(query = '', input = []) {
         try {
             pool.getConnection((err, conn) => {
                 if (err) {
-                    if(Reflect.has(conn || {}, 'destroy')) conn.destroy();
+                    if (Reflect.has(conn || {}, 'destroy')) conn.destroy();
                     reject(err);
-                }else {
+                } else {
                     resolve((superCallback) => new Promise((resolver, rechazar) => {
                         conn.query(query, input)
                             .on('error', function (err) {
-                                if(Reflect.has(conn || {}, 'destroy')) conn.destroy();
+                                if (Reflect.has(conn || {}, 'destroy')) conn.destroy();
                                 rechazar(err);
                             })
                             .stream()
@@ -44,7 +44,7 @@ async function _rawStream(query = '', input = []) {
                                     }
                                 }))
                             .on('finish', function () {
-                                if(Reflect.has(conn || {}, 'destroy')) conn.destroy();
+                                if (Reflect.has(conn || {}, 'destroy')) conn.destroy();
                                 resolver(true);
                             });
                     }));
@@ -91,6 +91,37 @@ function queryStream(query, input = []) {
     }
 }
 
+function _rawTry(transaction = async (connection = {}) => {}) {
+    return new Promise((resolve, reject) => {
+        pool.getConnection((err, conn) => {
+            if (err) {
+                if (Reflect.has(conn || {}, 'destroy')) conn.destroy();
+                reject(err);
+            } else {
+                // Begin
+                conn.beginTransaction(async (err) => {
+                    if (err) conn.rollback(() => reject(err));
+                    const _query = (query, input = []) => new Promise((_resolve, _reject) => conn.query(query, input, (err, result) => {
+                        if (err) conn.rollback( () => reject(err));
+                        _resolve(result);
+                    }));
+                    
+                    try {
+                        await transaction({query: _query});
+                        conn.commit((err) => {
+                            if (err) conn.rollback(() => reject(err));
+                            resolve(true);
+                        });
+                    } catch (err) {
+                        conn.rollback((error) => reject(error || err));
+                        reject(err);
+                    }
+                });
+                // End
+            }
+        })
+    })
+}
 module.exports = {
     /**
      * Returns a connection method, config is the same as mysql
@@ -105,7 +136,7 @@ module.exports = {
      */
     connect: (config = {}) => {
         pool = mysql.createPool(config);
-        
+
         return {
             /**
              *  Queries the database, returns a Promise that resolves in the result
@@ -120,14 +151,23 @@ module.exports = {
              * @param {String} query - Query string to be executed
              * @param {Array<Object>} input - Input parameters for prepared statements
              */
-            queryStream
+            queryStream,
+            /**
+             *  Do a Transaction, Pass queries in the callbacks body
+             *  
+             *  If OK transaction will be commited, if not it will be rollbacked and throw and error
+             * 
+             * @param {Function(Connection)} transaction - Query string to be executed
+             * @param {Array<Object>} input - Input parameters for prepared statements
+             */
+            try: _rawTry
         }
     },
     /**
      * Returns the mysql module (same as require('mysql'))
      */
     getMysql: () => mysql,
-    
+
     /** 
      * Populates mysql methods and properties into mysqlm 
      */

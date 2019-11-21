@@ -1,6 +1,6 @@
 # mysqlm
 A.K.A "MySQL Mini" is
-A minimalist Nodejs module that will give you improved mysql/mariadb query methods (promised and stream-like)
+A minimalist Nodejs module that will give you improved mysql/mariadb query methods (promised and stream-like and easy to use transactions)
 
 (It's basically a wrapper of mysql module)
 
@@ -66,8 +66,73 @@ await conn
 
 ````
 
-## getMysql
+## Try (aka Transactions)
+*try(callback: Function(Connection)) :Promise<Boolean>*
+
+A transaction executes all queries if there are no errors. A single error means the rollback of all queries.
+to be concise, all or nothing
+
+You can also think of it as a Try/Catch block, as this tries to execute every query
+
+Note:
+    If you want to do a soon rollback, just throw an error (see example 3)
+
+````javascript
+// 1. This will throw an error
+
+// Before Transaction, Table player have 0 rows
+await conn.try(async (t) => {
+  await t.query('INSERT INTO player SET ?', [{name: 'Max', points: 400}]);
+  await t.query('INSERT INTO player SET ?', [{name: 'Max2', points: 400}]);
+  await t.query('INSERT INTO player SET ?', [{name: 'Max3', points: 400}]);
+  await t.query('INSERT INTO player SET ?', [{name: 'Max4', points: 400}]);
+  await t.query('INSERT INTO ThIsTaBleNaMeShoUldntExistz SET ?', [{name: 'Max5', points: 400}]);
+});
+// After Transaction, Table player still have 0 rows
+// Because transaction failed
+
+````
+````javascript
+
+// 2. This will return true
+
+// Before Transaction, Table player have 0 rows
+await conn.try(async (t) => {
+  await t.query('INSERT INTO player SET ?', [{name: 'Max', points: 400}]);
+  await t.query('INSERT INTO player SET ?', [{name: 'Max2', points: 400}]);
+  await t.query('INSERT INTO player SET ?', [{name: 'Max3', points: 400}]);
+  await t.query('INSERT INTO player SET ?', [{name: 'Max4', points: 400}]);
+  await t.query('INSERT INTO player SET ?', [{name: 'Max5', points: 400}]);
+});
+// After Transaction, Table player still have 5 rows
+// Because transaction succeded
+
+````
+
+````javascript
+
+// 3. This will do a sooner rollback
+
+// Before Transaction, Table player have 0 rows
+await conn.try(async (t) => {
+  await t.query('INSERT INTO player SET ?', [{name: 'Max', points: 400}]);
+  if( 2 + 2 != 5 ){
+    throw 'Rollback'; // Sooner Rollback
+  }
+  await t.query('INSERT INTO player SET ?', [{name: 'Max2', points: 400}]);
+  await t.query('INSERT INTO player SET ?', [{name: 'Max3', points: 400}]);
+  await t.query('INSERT INTO player SET ?', [{name: 'Max4', points: 400}]);
+  await t.query('INSERT INTO player SET ?', [{name: 'Max5', points: 400}]);
+});
+// After Transaction, Table player still have 0 rows
+// Because transaction failed
+
+````
+
+## getMysql - deprecated
 *getMysql() :mysql*
+
+Deprecated (Now this module extends all mysql properties and methods to itself)
 
 Let's you get the mysql module, (same as require('mysql'))
 
@@ -77,5 +142,11 @@ Usage Case: When you need to do something this module doesnt have implemented ye
 const mysqlm = require('mysqlm');
 const mysql = mysqlm.getMysql();
 
-mysql.raw(...);
+mysql.Types; // All mysql types
+
+// Is the same as
+
+const mysqlm = require('mysqlm');
+
+mysqlm.Types; // All mysql Types
 ````
