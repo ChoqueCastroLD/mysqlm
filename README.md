@@ -81,7 +81,7 @@ Note:
 // 1. This will throw an error
 
 // Before Transaction, Table player have 0 rows
-await conn.try(async (t) => {
+await conn.transaction(async (t) => {
   await t.query('INSERT INTO player SET ?', [{name: 'Max', points: 400}]);
   await t.query('INSERT INTO player SET ?', [{name: 'Max2', points: 400}]);
   await t.query('INSERT INTO player SET ?', [{name: 'Max3', points: 400}]);
@@ -97,7 +97,7 @@ await conn.try(async (t) => {
 // 2. This will return true
 
 // Before Transaction, Table player have 0 rows
-await conn.try(async (t) => {
+await conn.transaction(async (t) => {
   await t.query('INSERT INTO player SET ?', [{name: 'Max', points: 400}]);
   await t.query('INSERT INTO player SET ?', [{name: 'Max2', points: 400}]);
   await t.query('INSERT INTO player SET ?', [{name: 'Max3', points: 400}]);
@@ -114,7 +114,7 @@ await conn.try(async (t) => {
 // 3. This will do a sooner rollback
 
 // Before Transaction, Table player have 0 rows
-await conn.try(async (t) => {
+await conn.transaction(async (t) => {
   await t.query('INSERT INTO player SET ?', [{name: 'Max', points: 400}]);
   if( 2 + 2 != 5 ){
     throw 'Rollback'; // Sooner Rollback
