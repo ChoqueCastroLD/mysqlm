@@ -160,7 +160,16 @@ module.exports = {
              * @param {Function(Connection)} transaction - Query string to be executed
              * @param {Array<Object>} input - Input parameters for prepared statements
              */
-            try: _rawTry
+            try: _rawTry,
+            /**
+             *  Do a Transaction, Pass queries in the callbacks body
+             *  
+             *  If OK transaction will be commited, if not it will be rollbacked and throw and error
+             * 
+             * @param {Function(Connection)} transaction - Query string to be executed
+             * @param {Array<Object>} input - Input parameters for prepared statements
+             */
+            transaction: _rawTry
         }
     },
     /**
