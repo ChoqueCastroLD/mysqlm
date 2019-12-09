@@ -20,6 +20,23 @@ async function query(query, input) {
     })
 }
 
+async function queryOne(query, input) {
+    return new Promise((resolve, reject) => {
+        pool.getConnection((err, conn) => {
+            if (err) {
+                if (Reflect.has(conn || {}, 'destroy')) conn.destroy();
+                reject(err);
+            } else {
+                conn.query(query, input, (err, result) => {
+                    if (Reflect.has(conn || {}, 'destroy')) conn.destroy();
+                    if (err) reject(err);
+                    else resolve(Array.isArray(result) ? result[0] : result);
+                })
+            }
+        });
+    })
+}
+
 async function _rawStream(query = '', input = []) {
     return new Promise((resolve, reject) => {
         try {
@@ -145,6 +162,13 @@ module.exports = {
              * @param {Array<Object>} input - Input parameters for prepared statements
              */
             query,
+            /**
+             *  Queries the database, returns a Promise that resolves in the first element of the result
+             * 
+             * @param {String} query - Query string to be executed
+             * @param {Array<Object>} input - Input parameters for prepared statements
+             */
+            queryOne,
             /**
              *  Queries the database, returns a Object with a stream-like method
              * 

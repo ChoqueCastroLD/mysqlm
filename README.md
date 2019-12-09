@@ -41,6 +41,18 @@ for (const row of result) {
 }
 ````
 
+## queryOne
+*queryOne(query: String, input: Array\<String>) :Promise\<result>*
+
+Let's you query your database, returns a promise with first element of result
+
+````javascript
+let row = await conn.queryOne('SELECT * FROM pets WHERE id = ?', 4);
+
+console.log(row) // Row will be the pet with ID 4
+````
+
+
 ## queryStream
 *queryStream(query: String, input: Array\<String>) :Object*
 

@@ -13,7 +13,7 @@ test('Transaction with 5 inserts, check if rows increases in 5', async () => {
 
   let before = (await conn.query('SELECT count(name) as amount FROM test'))[0].amount;
   
-  await conn.try(async (t) => {
+  await conn.transaction(async (t) => {
     await t.query('INSERT INTO test SET ?', [{name: 'Max', points: 400}]);
     await t.query('INSERT INTO test SET ?', [{name: 'Max2', points: 400}]);
     await t.query('INSERT INTO test SET ?', [{name: 'Max3', points: 400}]);
@@ -38,12 +38,12 @@ test('Transaction with 4 inserts ok and 1 bad, any query should be done if somet
   let before = (await conn.query('SELECT count(name) as amount FROM test'))[0].amount;
   
   try {
-    await conn.try(async (t) => {
-      await t.query('INSERT INTO test SET ?', [{name: 'Max', points: 400}]);
-      await t.query('INSERT INTO test SET ?', [{name: 'Max2', points: 400}]);
-      await t.query('INSERT INTO test SET ?', [{name: 'Max3', points: 400}]);
-      await t.query('INSERT INTO test SET ?', [{name: 'Max4', points: 400}]);
-      await t.query('INSERT INTO ThIsTaBleNaMeShoUldntExistz SET ?', [{name: 'Max5', points: 400}]);
+    await conn.transaction(async (t) => {
+      await t.query('INSERT INTO test SET ?', [{name: 'tMax', points: 400}]);
+      await t.query('INSERT INTO test SET ?', [{name: 'tMax2', points: 400}]);
+      await t.query('INSERT INTO test SET ?', [{name: 'tMax3', points: 400}]);
+      await t.query('INSERT INTO test SET ?', [{name: 'tMax4', points: 400}]);
+      await t.query('INSERT INTO ThIsTaBleNaMeShoUldntExistz SET ?', [{name: 'tMax5', points: 400}]);
     });
   } catch (error) {
     // We dont want to test if it throws an error here
@@ -67,7 +67,7 @@ test('Transaction with soon rollback', async () => {
   let before = (await conn.query('SELECT count(name) as amount FROM test'))[0].amount;
   
   try {
-    await conn.try(async (t) => {
+    await conn.transaction(async (t) => {
       await t.query('INSERT INTO test SET ?', [{name: 'Max', points: 400}]);
       if( 2 + 2 != 5 ){
         throw 'Rollback'; // Sooner Rollback
