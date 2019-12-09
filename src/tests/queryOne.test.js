@@ -19,3 +19,16 @@ test('Query One (insert, select, delete)', async () => {
   
   expect(Array.isArray(test)).toBe(false);
 });
+
+test('Query One if array empty (insert, select, delete)', async () => {
+  const conn = mysqlm.connect({
+    host: DB_HOST,
+    user: DB_USER,
+    database: 'testdb',
+    password: DB_PASSWORD
+  });
+
+  let test = await conn.queryOne('SELECT * FROM test WHERE name = "ONotExistsOOO"');
+  
+  expect(Array.isArray(test)).toBe(false);
+});
