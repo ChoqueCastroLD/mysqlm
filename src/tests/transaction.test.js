@@ -3,7 +3,7 @@ const {DB_HOST, DB_USER, DB_PASSWORD} = require('mandatoryenv').load(["DB_HOST",
 const mysqlm = require('../index');
 
 
-test('Transaction with 5 inserts, check if rows increases in 5', async () => {
+test('Transaction with 5 inserts, check if rows count increases in 5', async () => {
   const conn = mysqlm.connect({
     host: DB_HOST,
     user: DB_USER,
@@ -23,7 +23,7 @@ test('Transaction with 5 inserts, check if rows increases in 5', async () => {
   
   let after = (await conn.query('SELECT count(name) as amount FROM test'))[0].amount;
 
-  expect(before+5).toBe(after);
+  expect(before).toBe(parseInt(after) - 5);
 });
 
 

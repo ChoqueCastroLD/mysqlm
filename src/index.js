@@ -30,7 +30,7 @@ async function queryOne(query, input) {
                 conn.query(query, input, (err, result) => {
                     if (Reflect.has(conn || {}, 'destroy')) conn.destroy();
                     if (err) reject(err);
-                    else resolve(Array.isArray(result) ? result[0] : result);
+                    else resolve(Array.isArray(result) ? (result.length > 0 ? result[0] : undefined) : undefined);
                 })
             }
         });
