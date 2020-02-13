@@ -10,8 +10,13 @@ test('Query insert select', async () => {
     database: 'testdb',
     password: DB_PASSWORD
   });
+  
+  const data = {
+    name: 'Marcos',
+    points: 300
+  };
 
-  let {insertId} = await conn.query('INSERT INTO test(name, points) VALUES("Marcos", 300)');
+  let {insertId} = await conn.query('INSERT INTO test SET ?', data);
   
   let inserted = (await conn.query('SELECT * FROM test WHERE id = ?', [insertId]))[0];
   
