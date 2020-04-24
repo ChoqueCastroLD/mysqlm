@@ -7,11 +7,11 @@ async function query(query, input) {
     return new Promise((resolve, reject) => {
         pool.getConnection((err, conn) => {
             if (err) {
-                if (Reflect.has(conn || {}, 'destroy')) conn.destroy();
+                if (Reflect.has(conn || {}, 'destroy')) conn.release();
                 reject(err);
             } else {
                 conn.query(query, input, (err, result) => {
-                    if (Reflect.has(conn || {}, 'destroy')) conn.destroy();
+                    if (Reflect.has(conn || {}, 'destroy')) conn.release();
                     if (err) reject(err);
                     else resolve(result);
                 })
@@ -24,11 +24,11 @@ async function queryOne(query, input) {
     return new Promise((resolve, reject) => {
         pool.getConnection((err, conn) => {
             if (err) {
-                if (Reflect.has(conn || {}, 'destroy')) conn.destroy();
+                if (Reflect.has(conn || {}, 'destroy')) conn.release();
                 reject(err);
             } else {
                 conn.query(query, input, (err, result) => {
-                    if (Reflect.has(conn || {}, 'destroy')) conn.destroy();
+                    if (Reflect.has(conn || {}, 'destroy')) conn.release();
                     if (err) reject(err);
                     else resolve(Array.isArray(result) ? (result.length > 0 ? result[0] : undefined) : undefined);
                 })
@@ -42,13 +42,13 @@ async function _rawStream(query = '', input = []) {
         try {
             pool.getConnection((err, conn) => {
                 if (err) {
-                    if (Reflect.has(conn || {}, 'destroy')) conn.destroy();
+                    if (Reflect.has(conn || {}, 'destroy')) conn.release();
                     reject(err);
                 } else {
                     resolve((superCallback) => new Promise((resolver, rechazar) => {
                         conn.query(query, input)
                             .on('error', function (err) {
-                                if (Reflect.has(conn || {}, 'destroy')) conn.destroy();
+                                if (Reflect.has(conn || {}, 'destroy')) conn.release();
                                 rechazar(err);
                             })
                             .stream()
@@ -61,7 +61,7 @@ async function _rawStream(query = '', input = []) {
                                     }
                                 }))
                             .on('finish', function () {
-                                if (Reflect.has(conn || {}, 'destroy')) conn.destroy();
+                                if (Reflect.has(conn || {}, 'destroy')) conn.release();
                                 resolver(true);
                             });
                     }));
@@ -112,7 +112,7 @@ function _rawTry(transaction = async (connection = {}) => {}) {
     return new Promise((resolve, reject) => {
         pool.getConnection((err, conn) => {
             if (err) {
-                if (Reflect.has(conn || {}, 'destroy')) conn.destroy();
+                if (Reflect.has(conn || {}, 'destroy')) conn.release();
                 reject(err);
             } else {
                 // Begin
